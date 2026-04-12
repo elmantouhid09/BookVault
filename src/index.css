@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-background: #080C14;
+  --color-surface: #0F1623;
+  --color-border-subtle: rgba(255,255,255,0.08);
+  --color-border-hover: rgba(99,102,241,0.5);
+  --color-primary: #6366F1;
+  --color-secondary: #A855F7;
+  --color-text-primary: #F1F5F9;
+  --color-text-muted: #64748B;
+  --color-success: #10B981;
+  
+  --color-source-openlibrary: #3B82F6;
+  --color-source-gutenberg: #10B981;
+  --color-source-arxiv: #F59E0B;
+  --color-source-standardebooks: #8B5CF6;
+  --color-source-external: #475569;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-panel:focus-within {
+  border-color: rgba(99, 102, 241, 0.6);
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+}
+
+.card-hover {
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.card-hover:hover {
+  border-color: var(--color-border-hover);
+  transform: translateY(-4px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  border-radius: 10px;
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.1);
+  transform: scale(1.02);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton {
+  background: #0F1623;
+  background-image: linear-gradient(to right, #0F1623 0%, rgba(255,255,255,0.05) 20%, #0F1623 40%, #0F1623 100%);
+  background-repeat: no-repeat;
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear forwards;
+}
