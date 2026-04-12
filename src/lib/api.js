@@ -1,9 +1,9 @@
-export async function fetchOpenLibrary(query) {
+export async function fetchOpenLibrary(query, signal) {
   try {
-    const res = await fetch(`/api/openlibrary?q=${encodeURIComponent(query)}`);
+    const res = await fetch(`/api/openlibrary?q=${encodeURIComponent(query)}`, { signal });
     if (!res.ok) return [];
     const data = await res.json();
-    return (data.docs || []).slice(0, 10).map(doc => ({
+    return (data.docs || []).slice(0, 5).map(doc => ({
       id: `ol_${doc.key.replace('/works/', '')}`,
       title: doc.title,
       author: doc.author_name ? doc.author_name[0] : 'Unknown Author',
@@ -15,17 +15,18 @@ export async function fetchOpenLibrary(query) {
       type: 'book'
     }));
   } catch (e) {
-    console.error(e);
+    if (e.name === 'AbortError') console.log('OpenLibrary fetch aborted');
+    else console.error(e);
     return [];
   }
 }
 
-export async function fetchGutenberg(query) {
+export async function fetchGutenberg(query, signal) {
   try {
-    const res = await fetch(`/api/gutenberg?q=${encodeURIComponent(query)}`);
+    const res = await fetch(`/api/gutenberg?q=${encodeURIComponent(query)}`, { signal });
     if (!res.ok) return [];
     const data = await res.json();
-    return (data.results || []).slice(0, 10).map(doc => ({
+    return (data.results || []).slice(0, 5).map(doc => ({
       id: `gut_${doc.id}`,
       title: doc.title,
       author: doc.authors && doc.authors.length > 0 ? doc.authors[0].name : 'Unknown Author',
@@ -37,20 +38,21 @@ export async function fetchGutenberg(query) {
       type: 'classic'
     }));
   } catch (e) {
-    console.error(e);
+    if (e.name === 'AbortError') console.log('Gutenberg fetch aborted');
+    else console.error(e);
     return [];
   }
 }
 
-export async function fetchArxiv(query) {
+export async function fetchArxiv(query, signal) {
   try {
-    const res = await fetch(`/api/arxiv?q=${encodeURIComponent(query)}`);
+    const res = await fetch(`/api/arxiv?q=${encodeURIComponent(query)}`, { signal });
     if (!res.ok) return [];
     const data = await res.json();
     const entries = data.feed?.entry || [];
     // If single entry, it might not be an array
     const entryArray = Array.isArray(entries) ? entries : [entries];
-    return entryArray.map(doc => ({
+    return entryArray.slice(0, 5).map(doc => ({
       id: `arx_${doc.id[0].split('/abs/')[1]}`,
       title: doc.title[0].replace(/\n/g, ' ').trim(),
       author: doc.author ? doc.author[0].name[0] : 'Unknown Author',
@@ -62,19 +64,20 @@ export async function fetchArxiv(query) {
       type: 'paper'
     }));
   } catch (e) {
-    console.error(e);
+    if (e.name === 'AbortError') console.log('arXiv fetch aborted');
+    else console.error(e);
     return [];
   }
 }
 
-export async function fetchStandardEbooks(query) {
+export async function fetchStandardEbooks(query, signal) {
   try {
-    const res = await fetch(`/api/standardebooks?q=${encodeURIComponent(query)}`);
+    const res = await fetch(`/api/standardebooks?q=${encodeURIComponent(query)}`, { signal });
     if (!res.ok) return [];
     const data = await res.json();
     const entries = data.feed?.entry || [];
     const entryArray = Array.isArray(entries) ? entries : [entries];
-    return entryArray.map(doc => {
+    return entryArray.slice(0, 5).map(doc => {
       let cover = null;
       if (doc.link) {
         const imageLink = doc.link.find(l => l.$ && l.$.rel === 'http://opds-spec.org/image');
@@ -93,7 +96,8 @@ export async function fetchStandardEbooks(query) {
       };
     });
   } catch (e) {
-    console.error(e);
+    if (e.name === 'AbortError') console.log('Standard Ebooks fetch aborted');
+    else console.error(e);
     return [];
   }
 }
@@ -105,19 +109,25 @@ export async function searchAllSources(query) {
     return JSON.parse(cached);
   }
 
-  const withTimeout = (promise, ms) => {
-    return Promise.race([
-      promise,
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
-    ]);
+  const fetchWithTimeout = async (fetchFn, query, ms) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), ms);
+    try {
+      const result = await fetchFn(query, controller.signal);
+      clearTimeout(timeoutId);
+      return result;
+    } catch (e) {
+      clearTimeout(timeoutId);
+      return [];
+    }
   };
 
   try {
     const results = await Promise.allSettled([
-      withTimeout(fetchOpenLibrary(query), 8000),
-      withTimeout(fetchGutenberg(query), 8000),
-      withTimeout(fetchArxiv(query), 8000),
-      withTimeout(fetchStandardEbooks(query), 8000)
+      fetchWithTimeout(fetchOpenLibrary, query, 5000),
+      fetchWithTimeout(fetchGutenberg, query, 5000),
+      fetchWithTimeout(fetchArxiv, query, 5000),
+      fetchWithTimeout(fetchStandardEbooks, query, 5000)
     ]);
 
     let combined = [];

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -6,27 +6,13 @@ import { cn } from '../lib/utils';
 export function SearchBar({ initialQuery = '', className, autoFocus = false }) {
   const [query, setQuery] = useState(initialQuery);
   const navigate = useNavigate();
-  const debounceRef = useRef(null);
 
   useEffect(() => {
     setQuery(initialQuery);
   }, [initialQuery]);
 
-  useEffect(() => {
-    if (query !== initialQuery && query.trim() !== '') {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
-        navigate(`/search?q=${encodeURIComponent(query.trim())}`);
-      }, 400);
-    }
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [query, navigate, initialQuery]);
-
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (debounceRef.current) clearTimeout(debounceRef.current);
     if (query.trim()) {
       navigate(`/search?q=${encodeURIComponent(query.trim())}`);
     }

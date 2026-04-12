@@ -4,7 +4,7 @@ import { SearchBar } from '../components/SearchBar';
 import { BookCard, SkeletonCard } from '../components/BookCard';
 import { searchAllSources } from '../lib/api';
 import { supabase } from '../lib/supabase';
-import { ExternalLink, AlertCircle } from 'lucide-react';
+import { ExternalLink, AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const TABS = ['All', 'Books', 'Papers', 'Classics', 'External Sources'];
@@ -163,8 +163,13 @@ export function Search() {
         )}
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
+          <div className="space-y-8">
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-10 h-10 text-primary animate-spin" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
+            </div>
           </div>
         ) : activeTab === 'External Sources' ? (
           <div className="text-center py-20 max-w-md mx-auto">
