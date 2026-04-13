@@ -19,16 +19,27 @@ export function Auth() {
     try {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        if (error) {
+          if (error.message === 'Failed to fetch') {
+            throw new Error('Unable to connect to authentication server. Please check your internet connection or Supabase configuration.');
+          }
+          throw error;
+        }
         navigate(-1); // Go back to previous page
       } else {
         const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
+        if (error) {
+          if (error.message === 'Failed to fetch') {
+            throw new Error('Unable to connect to authentication server. Please check your internet connection or Supabase configuration.');
+          }
+          throw error;
+        }
         // If email confirmation is off, they are logged in.
         navigate(-1);
       }
     } catch (err) {
-      setError(err.message);
+      console.error('Auth error:', err);
+      setError(err.message || 'An unexpected error occurred during authentication.');
     } finally {
       setLoading(false);
     }

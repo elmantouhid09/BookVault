@@ -12,13 +12,26 @@ export function Saved() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/login');
-        return;
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        
+        if (!session) {
+          navigate('/login');
+          return;
+        }
+        setUser(session.user);
+        fetchSavedBooks(session.user.id);
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        // If it's a connection error, we might want to show an error state instead of just redirecting
+        if (err.message === 'Failed to fetch') {
+          setLoading(false);
+          // We could set an error state here if we had one
+        } else {
+          navigate('/login');
+        }
       }
-      setUser(session.user);
-      fetchSavedBooks(session.user.id);
     };
     checkAuth();
   }, [navigate]);
